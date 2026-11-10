@@ -32,17 +32,19 @@ export const login = async (req, res) => {
             }
         );
 
-        const token = await jwt.sign(
+        const token = jwt.sign(
             {userId: user._id}, 
             process.env.JWT_SECRET, 
             {expiresIn: "7d"}
         );
 
+        const isProduction = process.env.NODE_ENV === "production";
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,
-            sameSite: "strict",
-            maxAge: 7*24*60*60*1000
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
+            maxAge: 7*24*60*60*1000,
+            path: "/"
         });
 
         res.status(200).json(user);
@@ -53,24 +55,48 @@ export const login = async (req, res) => {
     }
 }
 
+// export const logout = async (req, res) => {
+//     try{
+//         res.clearCookie("token", token, {
+//             httpOnly: true,
+//             secure: false,
+//             sameSite: "strict",
+//             maxAge: 7*24*60*60*1000
+//         });
+
+//         return res.status(200).json({
+//             message: "logout successfuly"
+//         });
+//     }catch(error){
+//         return res.status(200).json({
+//             message: `logout error ${error}`
+//         });
+//     }
+// }
+
+
 export const logout = async (req, res) => {
-    try{
-        res.clearCookie("token", token, {
+    try {
+        const isProduction = process.env.NODE_ENV === "production";
+
+        res.clearCookie("token", {
             httpOnly: true,
-            secure: false,
-            sameSite: "strict",
-            maxAge: 7*24*60*60*1000
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
+            path: "/"
         });
 
         return res.status(200).json({
-            message: "logout successfuly"
+            message: "Logout successfully"
         });
-    }catch(error){
-        return res.status(200).json({
-            message: `logout error ${error}`
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Logout failed"
         });
     }
-}
+};
+
 
 export const me = async (req, res) => {
     try{
